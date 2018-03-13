@@ -1599,6 +1599,26 @@ void SwitchHandler()
             switchflag = 2;             // Toggle with pushbutton to Gnd
           }
           break;
+        case PUSHBUTTONHOLD_EXCLUSIVE:
+          if ((PRESSED == button) && (NOT_PRESSED == lastwallswitch[i])) { // if this button was just pressed
+            holdwallswitch[i] = Settings.param[P_HOLD_TIME] * (STATES / 10);
+
+            // turn off all other switches
+            for (byte k = 0; k < MAX_SWITCHES; k++) {
+                if (k == i) { // don't turn off current switch
+                  continue;
+                }
+                holdwallswitch[k] = 0;
+                if (!send_button_power(0, k +1, POWER_OFF)) {  // Execute Toggle command via MQTT if ButtonTopic is set
+                  ExecuteCommandPower(k +1, POWER_OFF);  // Execute Toggle command internally
+                }
+            }  
+          }
+          if ((PRESSED == button) && (NOT_PRESSED == lastwallswitch[i]) && (holdwallswitch[i])) {
+            holdwallswitch[i] = 0;
+            switchflag = 2;             // Toggle with pushbutton to Gnd
+          }
+          break;
         }
 
         if (switchflag < 3) {
